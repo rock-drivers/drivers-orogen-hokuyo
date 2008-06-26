@@ -1,0 +1,31 @@
+name 'hokuyo'
+using_toolkit 'dfki'
+using_library 'hokuyo'
+
+task_context 'LaserAcquisition' do
+    needs_configuration
+
+    property 'port', '/std/string', 'the device port'
+    property 'rate', 'int'        , 'the baud rate (only for serial connections)'
+
+    property 'start_step',  'int', 'the step at which to start acquisition'
+    property 'end_step',    'int', 'the step at which to end acquisition'
+    property 'scan_skip',   'int', 'how much acquisitions to ignore between two acquisitions to report'
+    property 'merge_count', 'int', 'how much ranges measurement to merge into one single reported measurement'
+
+    buffer_port 'timestamps', 'DFKI/Timestamp', 'r'
+    buffer_port 'scans', 'DFKI/LaserReadings', 10, 'w'
+end
+
+static_deployment do
+    disable_corba
+    loglevel :info
+
+    task('Acquisition', 'LaserAcquisition').
+        period(0.01).
+        start
+
+    # Sets up a task browser on the following task
+    browse :Acquisition
+end
+
