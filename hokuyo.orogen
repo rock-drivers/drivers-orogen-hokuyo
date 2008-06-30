@@ -5,16 +5,24 @@ using_library 'hokuyo'
 task_context 'LaserAcquisition' do
     needs_configuration
 
-    property 'port', '/std/string', 'the device port'
-    property 'rate', 'int'        , 'the baud rate (only for serial connections)'
+    property('port', '/std/string', "").
+        doc 'the device port'
+    property('rate', 'int'        , 115200).
+        doc 'the baud rate (only for serial connections)'
 
-    property 'start_step',  'int', 'the step at which to start acquisition'
-    property 'end_step',    'int', 'the step at which to end acquisition'
-    property 'scan_skip',   'int', 'how much acquisitions to ignore between two acquisitions to report'
-    property 'merge_count', 'int', 'how much ranges measurement to merge into one single reported measurement'
+    property('start_step',  'int', -1).
+        doc 'the step at which to start acquisition'
+    property('end_step',    'int', -1).
+        doc 'the step at which to end acquisition'
+    property('scan_skip',   'int', 0).
+        doc 'how much acquisitions to ignore between two acquisitions to report'
+    property('merge_count', 'int', 1).
+        doc 'how much ranges measurement to merge into one single reported measurement'
 
-    buffer_port 'timestamps', 'DFKI/Timestamp', 'r'
-    buffer_port 'scans', 'DFKI/LaserReadings', 10, 'w'
+    buffer_port('timestamps', 'DFKI/Timestamp', 'r').
+        doc "if connected, gives the timestamps of the scans"
+    buffer_port('scans', 'DFKI/LaserReadings', 10, 'w').
+        doc "the laser scans themselves"
 end
 
 static_deployment do
