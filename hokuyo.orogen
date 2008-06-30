@@ -29,11 +29,14 @@ static_deployment do
     disable_corba
     loglevel :info
 
-    task('Acquisition', 'LaserAcquisition').
+    acquisition = task('Acquisition', 'LaserAcquisition').
+        period(0.01)
+
+    file_report(acquisition.scans, 'scans.txt').
         period(0.01).
         start
 
     # Sets up a task browser on the following task
-    browse :Acquisition
+    browse acquisition
 end
 
