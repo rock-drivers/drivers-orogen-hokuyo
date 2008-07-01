@@ -37,9 +37,9 @@ static_deployment do
     acquisition = task('Acquisition', 'LaserAcquisition').
         fd_driven
 
-    file_report(acquisition.scans, 'scans.txt').
-        period(0.01).
-        start
+    # file_report(acquisition.scans, 'scans.txt').
+    #     period(0.01).
+    #     start
 
     # Sets up a task browser on the following task
     browse acquisition
