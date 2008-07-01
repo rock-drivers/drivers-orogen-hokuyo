@@ -1,6 +1,9 @@
 name 'hokuyo'
 using_toolkit 'dfki'
 using_library 'hokuyo'
+toolkit do
+    load "stats.h"
+end
 
 task_context 'LaserAcquisition' do
     needs_configuration
@@ -19,6 +22,8 @@ task_context 'LaserAcquisition' do
     property('merge_count', 'int', 1).
         doc 'how much ranges measurement to merge into one single reported measurement'
 
+    data_port('stats', 'hokuyo/Statistics', 'rw').
+        doc "acquisition statistics"
     buffer_port('timestamps', 'DFKI/Timestamp', 'r').
         doc "if connected, gives the timestamps of the scans"
     buffer_port('scans', 'DFKI/LaserReadings', 10, 'w').
