@@ -21,6 +21,14 @@ LaserAcquisition::~LaserAcquisition()
     delete m_driver;
 }
 
+int LaserAcquisition::getFileDescriptor() const
+{
+    if (m_driver)
+        return m_driver->getFD();
+    else
+        return -1;
+}
+
 bool LaserAcquisition::configureHook()
 {
     auto_ptr<URG> driver(new URG());

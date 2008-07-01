@@ -2,11 +2,12 @@
 #define LASERACQUISITION_TASK_HPP
 
 #include "tasks/LaserAcquisitionBase.hpp"
+#include <rtt/FileDescriptorActivity.hpp>
 
 class URG;
 
 namespace hokuyo {
-    class LaserAcquisition : public LaserAcquisitionBase
+    class LaserAcquisition : public LaserAcquisitionBase, public RTT::FileDescriptorActivity::Provider
     {
 	friend class LaserAcquisitionBase;
     protected:
@@ -29,6 +30,8 @@ namespace hokuyo {
         void updateHook();
         void errorHook();
         void stopHook();
+
+        int getFileDescriptor() const;
     };
 }
 

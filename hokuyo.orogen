@@ -35,7 +35,7 @@ static_deployment do
     loglevel :info
 
     acquisition = task('Acquisition', 'LaserAcquisition').
-        period(0.01)
+        fd_driven
 
     file_report(acquisition.scans, 'scans.txt').
         period(0.01).
