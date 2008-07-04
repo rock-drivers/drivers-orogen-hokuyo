@@ -1,6 +1,10 @@
 name 'hokuyo'
 using_toolkit 'dfki'
 using_library 'hokuyo'
+if xenomai?
+    using_task_library 'ParPortTimestamper'
+end
+
 toolkit do
     load "stats.h"
 end
@@ -37,9 +41,14 @@ static_deployment do
     acquisition = task('Acquisition', 'LaserAcquisition').
         fd_driven
 
-    # file_report(acquisition.scans, 'scans.txt').
-    #     period(0.01).
-    #     start
+    file_report(acquisition.scans, 'scans.txt').
+        period(0.01).
+        start
+
+    if xenomai?
+        timestamps = task('Timestamp', 'ParPortTimestamper::Timestamper').
+            irq_driven
+    end
 
     # Sets up a task browser on the following task
     browse acquisition

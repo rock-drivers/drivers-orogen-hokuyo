@@ -1,7 +1,7 @@
 #ifndef LASERACQUISITION_TASK_HPP
 #define LASERACQUISITION_TASK_HPP
 
-#include "tasks/LaserAcquisitionBase.hpp"
+#include "hokuyo/LaserAcquisitionBase.hpp"
 #include <rtt/FileDescriptorActivity.hpp>
 
 class URG;
