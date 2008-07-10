@@ -11,9 +11,7 @@ using Orocos::Logger;
 LaserAcquisition::LaserAcquisition(std::string const& name)
     : LaserAcquisitionBase(name)
     , m_driver(0)
-    , m_max_period(0), m_sample_count(0), m_period_sum(0), m_period_sum2(0)
 {
-    m_last_stamp.seconds = 0;
 }
 
 LaserAcquisition::~LaserAcquisition()
@@ -44,46 +42,81 @@ bool LaserAcquisition::configureHook()
 
 bool LaserAcquisition::startHook()
 {
-    return handle_error(*m_driver, "start",
+    if (!handle_error(*m_driver, "start",
                 m_driver->startAcquisition(0, _start_step.value(), 
                     _end_step.value(), _scan_skip.value(), _merge_count.value())
-            );
+            ))
+        return false;
+
+    // The timestamper may have already sent data and filled the buffer. Clear
+    // it so that the next updateHook() gets a valid timestamp.
+    _timestamps.clear();
+    return true;
 }
 
 void LaserAcquisition::updateHook()
 {
     DFKI::LaserReadings reading;
-    if (handle_error(*m_driver, "reading", m_driver->readRanges(reading)))
+    if (!handle_error(*m_driver, "reading", m_driver->readRanges(reading)))
+        return error();
+
+    if (_timestamps.connected())
     {
-        if (m_last_stamp.seconds != 0)
+        // Now, we need to synchronize the scans that we will be receiving
+        // with the timestamps. What we assume here is that the timestamp
+        // computed on the driver side is always in-between two device
+        // ticks. Meaning that the "right" tick is between the current
+        // driver timestamp and the previous driver timestamp
+        //
+        // We are unable to do that for the first sample, so drop the first
+        // sample
+        if (m_last_device.seconds == 0)
         {
-            int last_s   = m_last_stamp.seconds;
-            int last_us  = m_last_stamp.microseconds;
-            int s        = reading.stamp.seconds;
-            int us       = reading.stamp.microseconds;
-
-            int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
-
-            m_period_sum += dt;
-            m_period_sum2 += dt * dt;
-            if (m_max_period < dt)
-                m_max_period = dt;
-            m_sample_count++;
-            
-            Statistics stats;
-            stats.count = m_sample_count;
-            stats.min   = 0;
-            stats.max   = m_max_period;
-            stats.mean  = m_period_sum / m_sample_count;
-            stats.dev   = sqrt((m_period_sum2 / m_sample_count) - (stats.mean * stats.mean));
-            _stats.Set(stats);
+            m_last_device = reading.stamp;
+            return;
         }
 
-        _scans.Push(reading);
-        m_last_stamp = reading.stamp;
+        DFKI::Time ts;
+        bool found = false;
+        while(_timestamps.Pop(ts))
+        {
+            if (ts > m_last_device && ts < reading.stamp)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) // did not find any matching timestamp
+            return error();
+
+        // Update latency statistics and then make reading.stamp the external
+        // timestamp
+        int last_s   = ts.seconds;
+        int last_us  = ts.microseconds;
+        int s        = reading.stamp.seconds;
+        int us       = reading.stamp.microseconds;
+
+        int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
+        _latency.Set(m_latency_stats.update(dt));
+
+        m_last_device = reading.stamp;
+        reading.stamp = ts;
     }
-    else
-        error();
+    
+    if (m_last_stamp.seconds != 0)
+    {
+        int last_s   = m_last_stamp.seconds;
+        int last_us  = m_last_stamp.microseconds;
+        int s        = reading.stamp.seconds;
+        int us       = reading.stamp.microseconds;
+
+        int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
+        _period.Set(m_period_stats.update(dt));
+    }
+
+    m_last_stamp = reading.stamp;
+    _scans.Push(reading);
 }
 void LaserAcquisition::errorHook()
 {

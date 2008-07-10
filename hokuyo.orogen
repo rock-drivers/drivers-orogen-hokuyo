@@ -26,9 +26,11 @@ task_context 'LaserAcquisition' do
     property('merge_count', 'int', 1).
         doc 'how much ranges measurement to merge into one single reported measurement'
 
-    data_port('stats', 'hokuyo/Statistics', 'rw').
-        doc "acquisition statistics"
-    buffer_port('timestamps', 'DFKI/Timestamp', 'r').
+    data_port('period', 'hokuyo/Statistics', 'rw').
+        doc "statistics on the acquisition period"
+    data_port('latency', 'hokuyo/Statistics', 'rw').
+        doc "statistics on the acquisition latency"
+    buffer_port('timestamps', 'DFKI/Time', 'r').
         doc "if connected, gives the timestamps of the scans"
     buffer_port('scans', 'DFKI/LaserReadings', 10, 'w').
         doc "the laser scans themselves"
@@ -41,14 +43,17 @@ static_deployment do
     acquisition = task('Acquisition', 'LaserAcquisition').
         fd_driven
 
-    file_report(acquisition.scans, 'scans.txt').
-        period(0.01).
-        start
-
     if xenomai?
         timestamps = task('Timestamp', 'ParPortTimestamper::Timestamper').
-            irq_driven
+            irq_driven.
+            start
+
+        connect timestamps.timestamps, acquisition.timestamps
     end
+
+    file_report(acquisition.scans, 'scans.txt', false).
+        period(0.09).
+        start
 
     # Sets up a task browser on the following task
     browse acquisition
