@@ -22,7 +22,7 @@ LaserAcquisition::~LaserAcquisition()
 int LaserAcquisition::getFileDescriptor() const
 {
     if (m_driver)
-        return m_driver->getFD();
+        return m_driver->getFileDescriptor();
     else
         return -1;
 }
