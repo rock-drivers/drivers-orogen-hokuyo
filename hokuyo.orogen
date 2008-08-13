@@ -51,7 +51,8 @@ static_deployment do
         connect timestamps.timestamps, acquisition.timestamps
     end
 
-    file_report(acquisition.scans, 'scans.txt', false).
+    data_logger('scans.log').
+        report(acquisition.scans, false).
         period(0.09).
         start
 
