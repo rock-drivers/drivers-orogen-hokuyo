@@ -52,7 +52,6 @@ static_deployment do
 
     data_logger('scans.log').
         report(acquisition.scans, false).
-        period(0.09).
         start
 
     # Sets up a task browser on the following task
