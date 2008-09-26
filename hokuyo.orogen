@@ -37,7 +37,6 @@ task_context 'LaserAcquisition' do
 end
 
 static_deployment do
-    disable_corba
     loglevel :info
 
     acquisition = task('Acquisition', 'LaserAcquisition').
