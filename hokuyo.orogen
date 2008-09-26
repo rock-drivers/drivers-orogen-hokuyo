@@ -55,6 +55,8 @@ static_deployment do
         start
 
     # Sets up a task browser on the following task
-    browse acquisition
+    if !corba_enabled?
+        browse acquisition
+    end
 end
 
