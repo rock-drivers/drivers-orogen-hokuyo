@@ -78,7 +78,7 @@ void LaserAcquisition::updateHook()
 
         DFKI::Time ts;
         bool found = false;
-        while(_timestamps.Pop(ts))
+        while(_timestamps.read(ts))
         {
             if (ts > m_last_device && ts < reading.stamp)
             {
@@ -98,7 +98,7 @@ void LaserAcquisition::updateHook()
         int us       = reading.stamp.microseconds;
 
         int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
-        _latency.Set(m_latency_stats.update(dt));
+        _latency.write(m_latency_stats.update(dt));
 
         m_last_device = reading.stamp;
         reading.stamp = ts;
@@ -112,11 +112,11 @@ void LaserAcquisition::updateHook()
         int us       = reading.stamp.microseconds;
 
         int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
-        _period.Set(m_period_stats.update(dt));
+        _period.write(m_period_stats.update(dt));
     }
 
     m_last_stamp = reading.stamp;
-    _scans.Push(reading);
+    _scans.write(reading);
 }
 void LaserAcquisition::errorHook()
 {

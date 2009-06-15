@@ -7,7 +7,7 @@
 class URG;
 
 namespace hokuyo {
-    class LaserAcquisition : public LaserAcquisitionBase, public RTT::FileDescriptorActivity::Provider
+    class LaserAcquisition : public LaserAcquisitionBase
     {
 	friend class LaserAcquisitionBase;
     protected:

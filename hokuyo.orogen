@@ -1,16 +1,16 @@
 name 'hokuyo'
-using_toolkit 'dfki'
+
+import_types_from "dfki"
+import_types_from "stats.h"
+
 using_library 'hokuyo'
 if xenomai?
     using_task_library 'ParPortTimestamper'
 end
 
-toolkit do
-    load "stats.h"
-end
-
 task_context 'LaserAcquisition' do
     needs_configuration
+    fd_driven
 
     property('port', '/std/string', "").
         doc 'the device port'
@@ -25,22 +25,20 @@ task_context 'LaserAcquisition' do
         doc 'how much acquisitions to ignore between two acquisitions to report'
     property('merge_count', 'int', 1).
         doc 'how much ranges measurement to merge into one single reported measurement'
+    property('test', 'hokuyo/Statistics')
 
-    data_port('period', 'hokuyo/Statistics', 'rw').
+    output_port('period', 'hokuyo/Statistics').
         doc "statistics on the acquisition period"
-    data_port('latency', 'hokuyo/Statistics', 'rw').
+    output_port('latency', 'hokuyo/Statistics').
         doc "statistics on the acquisition latency"
-    buffer_port('timestamps', 'DFKI/Time', 'r').
+    input_port('timestamps', 'DFKI/Time').
         doc "if connected, gives the timestamps of the scans"
-    buffer_port('scans', 'DFKI/LaserReadings', 10, 'w').
+    output_port('scans', 'DFKI/LaserReadings').
         doc "the laser scans themselves"
 end
 
 static_deployment do
-    loglevel :info
-
-    acquisition = task('Acquisition', 'LaserAcquisition').
-        fd_driven
+    acquisition = task('Acquisition', 'LaserAcquisition')
 
     if xenomai?
         timestamps = task('Timestamp', 'ParPortTimestamper::Timestamper').
@@ -50,9 +48,8 @@ static_deployment do
         connect timestamps.timestamps, acquisition.timestamps
     end
 
-    data_logger('scans.log').
-        report(acquisition.scans, false).
-        start
+    logger('scans.log').
+        report(acquisition.scans)
 
     # Sets up a task browser on the following task
     if !corba_enabled?
