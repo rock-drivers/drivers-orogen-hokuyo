@@ -4,9 +4,6 @@ import_types_from "dfki"
 import_types_from "stats.h"
 
 using_library 'hokuyo'
-if xenomai?
-    using_task_library 'ParPortTimestamper'
-end
 
 task_context 'LaserAcquisition' do
     needs_configuration
@@ -39,14 +36,6 @@ end
 
 static_deployment do
     acquisition = task('Task', 'LaserAcquisition')
-
-    if xenomai?
-        timestamps = task('Timestamp', 'ParPortTimestamper::Timestamper').
-            irq_driven.
-            start
-
-        connect timestamps.timestamps, acquisition.timestamps
-    end
 
     add_default_logger
 
