@@ -1,12 +1,16 @@
 #include "LaserAcquisition.hpp"
-#include <hokuyo.hh>
 
+#include <rtt/FileDescriptorActivity.hpp>
+#include <hokuyo.hh>
 #include <memory>
 #include <iostream>
 
 using namespace hokuyo;
 using namespace std;
 using Orocos::Logger;
+
+RTT::FileDescriptorActivity* LaserAcquisition::getFileDescriptorActivity()
+{ return dynamic_cast< RTT::FileDescriptorActivity* >(getActivity().get()); }
 
 LaserAcquisition::LaserAcquisition(std::string const& name)
     : LaserAcquisitionBase(name)
@@ -19,14 +23,6 @@ LaserAcquisition::~LaserAcquisition()
     delete m_driver;
 }
 
-int LaserAcquisition::getFileDescriptor() const
-{
-    if (m_driver)
-        return m_driver->getFileDescriptor();
-    else
-        return -1;
-}
-
 bool LaserAcquisition::configureHook()
 {
     auto_ptr<URG> driver(new URG());
@@ -37,6 +33,8 @@ bool LaserAcquisition::configureHook()
 
     Logger::log(Logger::Info) << driver->getInfo() << Logger::endl;
     m_driver = driver.release();
+
+    getFileDescriptorActivity()->watch(m_driver->getFileDescriptor());
     return true;
 }
 

@@ -2,7 +2,12 @@
 #define LASERACQUISITION_TASK_HPP
 
 #include "hokuyo/LaserAcquisitionBase.hpp"
-#include <rtt/FileDescriptorActivity.hpp>
+
+
+namespace RTT
+{
+    class FileDescriptorActivity;
+}
 
 class URG;
 
@@ -50,16 +55,16 @@ namespace hokuyo {
         DFKI::Time m_last_stamp;
     
     public:
-        LaserAcquisition(std::string const& name = "LaserAcquisition");
+        LaserAcquisition(std::string const& name = "hokuyo::LaserAcquisition");
         ~LaserAcquisition();
+
+        RTT::FileDescriptorActivity* getFileDescriptorActivity();
 
         bool configureHook();
         bool startHook();
         void updateHook();
         void errorHook();
         void stopHook();
-
-        int getFileDescriptor() const;
     };
 }
 

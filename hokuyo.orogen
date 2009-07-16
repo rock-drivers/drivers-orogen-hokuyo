@@ -38,7 +38,7 @@ task_context 'LaserAcquisition' do
 end
 
 static_deployment do
-    acquisition = task('Acquisition', 'LaserAcquisition')
+    acquisition = task('Task', 'LaserAcquisition')
 
     if xenomai?
         timestamps = task('Timestamp', 'ParPortTimestamper::Timestamper').
@@ -48,10 +48,8 @@ static_deployment do
         connect timestamps.timestamps, acquisition.timestamps
     end
 
-    logger('scans.log').
-        report(acquisition.scans)
+    add_default_logger
 
-    # Sets up a task browser on the following task
     if !corba_enabled?
         browse acquisition
     end
