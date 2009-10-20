@@ -34,7 +34,8 @@ task_context 'LaserAcquisition' do
         doc "the laser scans themselves"
 end
 
-static_deployment do
+deployment "test_hokuyo" do
+    do_not_install
     acquisition = task('Task', 'LaserAcquisition')
 
     add_default_logger
