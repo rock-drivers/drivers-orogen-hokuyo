@@ -55,8 +55,8 @@ bool LaserAcquisition::startHook()
 void LaserAcquisition::updateHook()
 {
     DFKI::LaserReadings reading;
-    if (!handle_error(*m_driver, "reading", m_driver->readRanges(reading)))
-        return error();
+    if (!m_driver->readRanges(reading))
+	return;
 
     if (_timestamps.connected())
     {
