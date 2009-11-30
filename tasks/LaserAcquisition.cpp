@@ -54,7 +54,7 @@ bool LaserAcquisition::startHook()
 
 void LaserAcquisition::updateHook()
 {
-    DFKI::LaserReadings reading;
+    base::LaserReadings reading;
     if (!m_driver->readRanges(reading))
 	return;
 
@@ -74,7 +74,7 @@ void LaserAcquisition::updateHook()
             return;
         }
 
-        DFKI::Time ts;
+        base::Time ts;
         bool found = false;
         while(_timestamps.read(ts))
         {
@@ -118,7 +118,7 @@ void LaserAcquisition::updateHook()
 }
 void LaserAcquisition::errorHook()
 {
-    DFKI::LaserReadings reading;
+    base::LaserReadings reading;
     if (handle_error(*m_driver, "error", m_driver->fullReset()))
         if (handle_error(*m_driver, "reading", m_driver->readRanges(reading)))
             return recovered();

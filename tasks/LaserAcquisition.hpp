@@ -51,8 +51,8 @@ namespace hokuyo {
         StatUpdater m_period_stats;
         StatUpdater m_latency_stats;
 
-        DFKI::Time m_last_device;
-        DFKI::Time m_last_stamp;
+        base::Time m_last_device;
+        base::Time m_last_stamp;
     
     public:
         LaserAcquisition(std::string const& name = "hokuyo::LaserAcquisition");

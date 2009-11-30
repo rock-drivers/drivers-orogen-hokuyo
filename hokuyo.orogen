@@ -1,6 +1,6 @@
 name 'hokuyo'
 
-import_types_from "dfki"
+import_types_from "base"
 import_types_from "stats.h"
 
 using_library 'hokuyo'
@@ -28,9 +28,9 @@ task_context 'LaserAcquisition' do
         doc "statistics on the acquisition period"
     output_port('latency', 'hokuyo/Statistics').
         doc "statistics on the acquisition latency"
-    input_port('timestamps', 'DFKI/Time').
+    input_port('timestamps', 'base/Time').
         doc "if connected, gives the timestamps of the scans"
-    output_port('scans', 'DFKI/LaserReadings').
+    output_port('scans', 'base/LaserReadings').
         doc "the laser scans themselves"
 end
 
