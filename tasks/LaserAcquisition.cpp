@@ -42,7 +42,7 @@ bool LaserAcquisition::startHook()
 {
     if (!handle_error(*m_driver, "start",
                 m_driver->startAcquisition(0, _start_step.value(), 
-                    _end_step.value(), _scan_skip.value(), _merge_count.value())
+                    _end_step.value(), _scan_skip.value(), _merge_count.value(), _remission_values.value())
             ))
         return false;
 

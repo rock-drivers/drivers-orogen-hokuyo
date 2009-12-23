@@ -14,6 +14,8 @@ task_context 'LaserAcquisition' do
     property('rate', 'int'        , 115200).
         doc 'the baud rate (only for serial connections)'
 
+    property('remission_values',  'int', 0).
+        doc 'will record remission values if set to 1'
     property('start_step',  'int', -1).
         doc 'the step at which to start acquisition'
     property('end_step',    'int', -1).
