@@ -54,7 +54,7 @@ bool LaserAcquisition::startHook()
 
 void LaserAcquisition::updateHook()
 {
-    base::LaserReadings reading;
+    base::samples::LaserScan reading;
     if (!m_driver->readRanges(reading))
 	return;
 
@@ -70,7 +70,7 @@ void LaserAcquisition::updateHook()
         // sample
         if (m_last_device.seconds == 0)
         {
-            m_last_device = reading.stamp;
+            m_last_device = reading.time;
             return;
         }
 
@@ -78,7 +78,7 @@ void LaserAcquisition::updateHook()
         bool found = false;
         while(_timestamps.read(ts))
         {
-            if (ts > m_last_device && ts < reading.stamp)
+            if (ts > m_last_device && ts < reading.time)
             {
                 found = true;
                 break;
@@ -88,37 +88,37 @@ void LaserAcquisition::updateHook()
         if (!found) // did not find any matching timestamp
             return error();
 
-        // Update latency statistics and then make reading.stamp the external
+        // Update latency statistics and then make reading.time the external
         // timestamp
         int last_s   = ts.seconds;
         int last_us  = ts.microseconds;
-        int s        = reading.stamp.seconds;
-        int us       = reading.stamp.microseconds;
+        int s        = reading.time.seconds;
+        int us       = reading.time.microseconds;
 
         int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
         _latency.write(m_latency_stats.update(dt));
 
-        m_last_device = reading.stamp;
-        reading.stamp = ts;
+        m_last_device = reading.time;
+        reading.time = ts;
     }
     
     if (m_last_stamp.seconds != 0)
     {
         int last_s   = m_last_stamp.seconds;
         int last_us  = m_last_stamp.microseconds;
-        int s        = reading.stamp.seconds;
-        int us       = reading.stamp.microseconds;
+        int s        = reading.time.seconds;
+        int us       = reading.time.microseconds;
 
         int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
         _period.write(m_period_stats.update(dt));
     }
 
-    m_last_stamp = reading.stamp;
+    m_last_stamp = reading.time;
     _scans.write(reading);
 }
 void LaserAcquisition::errorHook()
 {
-    base::LaserReadings reading;
+    base::samples::LaserScan reading;
     if (handle_error(*m_driver, "error", m_driver->fullReset()))
         if (handle_error(*m_driver, "reading", m_driver->readRanges(reading)))
             return recovered();
