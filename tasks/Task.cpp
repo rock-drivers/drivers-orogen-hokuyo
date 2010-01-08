@@ -1,4 +1,4 @@
-#include "LaserAcquisition.hpp"
+#include "Task.hpp"
 
 #include <rtt/FileDescriptorActivity.hpp>
 #include <hokuyo.hh>
@@ -9,21 +9,23 @@ using namespace hokuyo;
 using namespace std;
 using Orocos::Logger;
 
-RTT::FileDescriptorActivity* LaserAcquisition::getFileDescriptorActivity()
+
+RTT::FileDescriptorActivity* Task::getFileDescriptorActivity()
 { return dynamic_cast< RTT::FileDescriptorActivity* >(getActivity().get()); }
 
-LaserAcquisition::LaserAcquisition(std::string const& name)
-    : LaserAcquisitionBase(name)
+
+Task::Task(std::string const& name)
+    : TaskBase(name)
     , m_driver(0)
 {
 }
 
-LaserAcquisition::~LaserAcquisition()
+Task::~Task()
 {
     delete m_driver;
 }
 
-bool LaserAcquisition::configureHook()
+bool Task::configureHook()
 {
     auto_ptr<URG> driver(new URG());
     if (_rate.value() && !handle_error(*driver, "setBaudRate", driver->setBaudrate(_rate.value())))
@@ -38,7 +40,7 @@ bool LaserAcquisition::configureHook()
     return true;
 }
 
-bool LaserAcquisition::startHook()
+bool Task::startHook()
 {
     if (!handle_error(*m_driver, "start",
                 m_driver->startAcquisition(0, _start_step.value(), 
@@ -52,7 +54,7 @@ bool LaserAcquisition::startHook()
     return true;
 }
 
-void LaserAcquisition::updateHook()
+void Task::updateHook()
 {
     base::samples::LaserScan reading;
     if (!m_driver->readRanges(reading))
@@ -116,7 +118,8 @@ void LaserAcquisition::updateHook()
     m_last_stamp = reading.time;
     _scans.write(reading);
 }
-void LaserAcquisition::errorHook()
+
+void Task::errorHook()
 {
     base::samples::LaserScan reading;
     if (handle_error(*m_driver, "error", m_driver->fullReset()))
@@ -125,11 +128,18 @@ void LaserAcquisition::errorHook()
 
     fatal();
 }
+void Task::stopHook()
+{
+    m_driver->stopAcquisition();
+}
+void Task::cleanupHook()
+{
+    getFileDescriptorActivity()->unwatch(m_driver->getFileDescriptor());
+    delete m_driver;
+    m_driver = 0;
+}
 
-void LaserAcquisition::stopHook()
-{ m_driver->stopAcquisition(); }
-
-bool LaserAcquisition::handle_error(URG& driver, string const& phase, bool retval)
+bool Task::handle_error(URG& driver, string const& phase, bool retval)
 {
     if (!retval)
     {

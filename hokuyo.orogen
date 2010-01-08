@@ -5,7 +5,7 @@ import_types_from "stats.h"
 
 using_library 'hokuyo'
 
-task_context 'LaserAcquisition' do
+task_context 'Task' do
     needs_configuration
     fd_driven
 
@@ -38,7 +38,7 @@ end
 
 deployment "test" do
     do_not_install
-    acquisition = task('driver', 'LaserAcquisition')
+    acquisition = task('driver', 'Task')
 
     add_default_logger
 
