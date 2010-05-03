@@ -1,13 +1,18 @@
+<?xml version="1.0"?>
 <package>
-    <description brief="oroGen driver for Hokuyo laser scanner">
+  <description brief="oroGen driver for Hokuyo laser scanner">
         This oroGen component offers an integrated driver to access the Hokuyo
         laser scanners (through the SCIP2 protocol).
     </description>
-    <author>Sylvain Joyeux/sylvain.joyeux@dfki.de</author>
-    <copyright>
+  <author>Sylvain Joyeux/sylvain.joyeux@dfki.de</author>
+  <copyright>
         DFKI/robotik@dfki.de
         Sylvain Joyeux/sylvain.joyeux@m4x.org
     </copyright>
-    <license>GPL v2 or later</license>
+  <license>GPL v2 or later</license>
+  <depend package="drivers/hokuyo"/>
+  <depend package="orocos/base"/>
+  <depend package="orocos/logger"/>
+  <depend package="orocos/orogen"/>
+  <depend package="orocos/rtt"/>
 </package>
-
