@@ -10,12 +10,12 @@ ENV['PKG_CONFIG_PATH'] = "#{File.expand_path("..", File.dirname(__FILE__))}/buil
 
 Orocos.initialize
 
-Orocos::Process.spawn 'test_imu' do |p|
+Orocos::Process.spawn 'test' do |p|
     #Orocos.log_all_ports
 
     # initialise hokuyo
     puts "starting hokuyo ..."
-    hokuyo = p.task 'hokuyo'
+    hokuyo = p.task 'driver'
 
     hokuyo.port = ARGV[0]
     hokuyo.remission_values = 1
@@ -26,12 +26,13 @@ Orocos::Process.spawn 'test_imu' do |p|
 
     scan_reader = hokuyo.scans.reader
     loop do
-	if scan_line = reader.read
+	if scan_line = scan_reader.read
 	    ranges = scan_line.ranges.to_a
 	    remission = scan_line.remission.to_a
 	    max_rem, idx = remission.each_with_index.max
+            angle = (scan_line.start_angle + scan_line.angular_resolution * idx)/Math::PI*180.0
 
-	    print % "rem: %f\trange: %f\r" % [ max_rem, ranges[idx] ]
+	    print "idx: %f\tangle: %f\trem: %f\trange: %f\r" % [ idx, angle, max_rem, ranges[idx] ]
 	end
 	sleep 0.01
     end
