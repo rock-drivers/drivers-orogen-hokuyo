@@ -70,7 +70,7 @@ void Task::updateHook()
         //
         // We are unable to do that for the first sample, so drop the first
         // sample
-        if (m_last_device.seconds == 0)
+        if (m_last_device.isNull() == 0)
         {
             m_last_device = reading.time;
             return;
@@ -92,27 +92,17 @@ void Task::updateHook()
 
         // Update latency statistics and then make reading.time the external
         // timestamp
-        int last_s   = ts.seconds;
-        int last_us  = ts.microseconds;
-        int s        = reading.time.seconds;
-        int us       = reading.time.microseconds;
-
-        int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
-        _latency.write(m_latency_stats.update(dt));
+        base::Time dt = reading.time - ts;
+        _latency.write(m_latency_stats.update(dt.toMilliseconds()));
 
         m_last_device = reading.time;
         reading.time = ts;
     }
     
-    if (m_last_stamp.seconds != 0)
+    if (!m_last_stamp.isNull())
     {
-        int last_s   = m_last_stamp.seconds;
-        int last_us  = m_last_stamp.microseconds;
-        int s        = reading.time.seconds;
-        int us       = reading.time.microseconds;
-
-        int dt = ((s - last_s) * 1000 + (us - last_us) / 1000);
-        _period.write(m_period_stats.update(dt));
+        base::Time dt = reading.time - m_last_stamp;
+        _period.write(m_period_stats.update(dt.toMilliseconds()));
     }
 
     m_last_stamp = reading.time;
