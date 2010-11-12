@@ -11,8 +11,7 @@
     </copyright>
   <license>GPL v2 or later</license>
   <depend package="drivers/hokuyo"/>
-  <depend package="orocos/base"/>
-  <depend package="orocos/logger"/>
-  <depend package="orocos/orogen"/>
-  <depend package="orocos/rtt"/>
+  <depend package="modules/base"/>
+  <depend package="modules/logger"/>
+  <depend package="orogen"/>
 </package>

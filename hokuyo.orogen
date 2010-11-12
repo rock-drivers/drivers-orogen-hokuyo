@@ -34,6 +34,8 @@ task_context 'Task' do
         doc "if connected, gives the timestamps of the scans"
     output_port('scans', 'base/samples/LaserScan').
         doc "the laser scans themselves"
+
+    error_states :TIMESTAMP_MISMATCH
 end
 
 deployment "test" do

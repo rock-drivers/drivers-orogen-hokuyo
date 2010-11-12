@@ -3,12 +3,6 @@
 
 #include "hokuyo/TaskBase.hpp"
 
-
-namespace RTT
-{
-    class FileDescriptorActivity;
-}
-
 class URG;
 
 namespace hokuyo {
@@ -18,7 +12,6 @@ namespace hokuyo {
     protected:
     
         URG* m_driver;
-        bool handle_error(URG& driver, std::string const& phase, bool retval);
     
         struct StatUpdater
         {
@@ -54,11 +47,11 @@ namespace hokuyo {
         base::Time m_last_device;
         base::Time m_last_stamp;
 
+        void readData(bool use_external_timestamps);
+
     public:
         Task(std::string const& name = "hokuyo::Task");
         ~Task();
-
-        RTT::FileDescriptorActivity* getFileDescriptorActivity();
 
         /** This hook is called by Orocos when the state machine transitions
          * from PreOperational to Stopped. If it returns false, then the
