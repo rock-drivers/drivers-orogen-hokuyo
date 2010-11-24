@@ -11,7 +11,7 @@
     </copyright>
   <license>GPL v2 or later</license>
   <depend package="drivers/hokuyo"/>
-  <depend package="modules/base"/>
-  <depend package="modules/logger"/>
+  <depend package="base/orogen/types"/>
+  <depend package="tools/logger"/>
   <depend package="orogen"/>
 </package>
