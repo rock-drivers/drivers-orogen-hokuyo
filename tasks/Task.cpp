@@ -37,16 +37,16 @@ bool Task::configureHook()
 
     Logger::log(Logger::Info) << driver->getInfo() << Logger::endl;
     m_driver = driver.release();
-
-    RTT::extras::FileDescriptorActivity* fd_activity =
-        getActivity<RTT::extras::FileDescriptorActivity>();
-    if (fd_activity)
-        fd_activity->watch(m_driver->getFileDescriptor());
     return true;
 }
 
 bool Task::startHook()
 {
+    RTT::extras::FileDescriptorActivity* fd_activity =
+        getActivity<RTT::extras::FileDescriptorActivity>();
+    if (fd_activity)
+        fd_activity->watch(m_driver->getFileDescriptor());
+
     if (!m_driver->startAcquisition(0, _start_step.value(), _end_step.value(), _scan_skip.value(), _merge_count.value(), _remission_values.value()))
     {
         std::cerr << "failed to start acquisition" << std::endl;
@@ -130,15 +130,15 @@ void Task::errorHook()
 }
 void Task::stopHook()
 {
+    RTT::extras::FileDescriptorActivity* fd_activity =
+        getActivity<RTT::extras::FileDescriptorActivity>();
+    if (fd_activity)
+        fd_activity->clearAllWatches();
+
     m_driver->stopAcquisition();
 }
 void Task::cleanupHook()
 {
-    RTT::extras::FileDescriptorActivity* fd_activity =
-        getActivity<RTT::extras::FileDescriptorActivity>();
-    if (fd_activity)
-        fd_activity->unwatch(m_driver->getFileDescriptor());
-
     delete m_driver;
     m_driver = 0;
 }
