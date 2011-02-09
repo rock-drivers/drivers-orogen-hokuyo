@@ -33,6 +33,7 @@ task_context 'Task' do
     input_port('timestamps', 'base/Time').
         doc "if connected, gives the timestamps of the scans"
     output_port('scans', 'base/samples/LaserScan').
+        max_sizes('remission' => 2000, 'ranges' => 2000).
         doc "the laser scans themselves"
 
     error_states :TIMESTAMP_MISMATCH
