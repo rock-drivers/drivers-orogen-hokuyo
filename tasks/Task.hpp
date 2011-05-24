@@ -3,6 +3,12 @@
 
 #include "hokuyo/TaskBase.hpp"
 
+namespace aggregator
+{
+    template<class Item>
+    class TimestampSynchronizer;
+}
+
 class URG;
 
 namespace hokuyo {
@@ -47,7 +53,8 @@ namespace hokuyo {
         base::Time m_last_device;
         base::Time m_last_stamp;
 
-        void readData(bool use_external_timestamps);
+	aggregator::TimestampSynchronizer<base::samples::LaserScan>*
+	timestamp_synchronizer;
 
     public:
         Task(std::string const& name = "hokuyo::Task");
@@ -100,7 +107,7 @@ namespace hokuyo {
          *
          * Call recovered() to go back in the Runtime state.
          */
-        void errorHook();
+        //void errorHook();
 
         /** This hook is called by Orocos when the state machine transitions
          * from Running to Stopped after stop() has been called.

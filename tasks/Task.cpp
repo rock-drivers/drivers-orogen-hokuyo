@@ -4,6 +4,7 @@
 #include <hokuyo.hh>
 #include <memory>
 #include <iostream>
+#include <TimestampSynchronizer.hpp>
 
 using namespace hokuyo;
 using namespace std;
@@ -12,16 +13,28 @@ using RTT::Logger;
 Task::Task(std::string const& name)
     : TaskBase(name)
     , m_driver(0)
+    , timestamp_synchronizer(0)
 {
 }
 
 Task::~Task()
 {
     delete m_driver;
+    delete timestamp_synchronizer;
 }
 
 bool Task::configureHook()
 {
+   timestamp_synchronizer =
+       new aggregator::TimestampSynchronizer<base::samples::LaserScan>
+       (base::Time::fromSeconds(0.10),
+	//the time needed to capture a full scan is subtracted when pushing the
+	//item into the synchronizer
+	base::Time::fromSeconds(0),
+	base::Time::fromSeconds(0.025),
+	base::Time::fromSeconds(20),
+	base::Time::fromSeconds(0.025));
+
     auto_ptr<URG> driver(new URG());
     if (_rate.value() && !driver->setBaudrate(_rate.value()))
     {
@@ -59,75 +72,48 @@ bool Task::startHook()
     return true;
 }
 
-void Task::readData(bool use_external_timestamps)
-{
-    base::samples::LaserScan reading;
-    if (!m_driver->readRanges(reading))
-	return;
-
-    if (use_external_timestamps && _timestamps.connected())
-    {
-        // Now, we need to synchronize the scans that we will be receiving
-        // with the timestamps. What we assume here is that the timestamp
-        // computed on the driver side is always in-between two device
-        // ticks. Meaning that the "right" tick is between the current
-        // driver timestamp and the previous driver timestamp
-        //
-        // We are unable to do that for the first sample, so drop the first
-        // sample
-        if (m_last_device.isNull() == 0)
-        {
-            m_last_device = reading.time;
-            return;
-        }
-
-        base::Time ts;
-        bool found = false;
-        while(_timestamps.read(ts) == RTT::NewData)
-        {
-            if (ts > m_last_device && ts < reading.time)
-            {
-                found = true;
-                break;
-            }
-        }
-
-        if (found)
-        {
-            // Update latency statistics and then make reading.time the external
-            // timestamp
-            base::Time dt = reading.time - ts;
-            _latency.write(m_latency_stats.update(dt.toMilliseconds()));
-
-            m_last_device = reading.time;
-            reading.time = ts;
-        }
-        else
-        {
-            // did not find any matching timestamp. Go into degraded mode.
-            error(TIMESTAMP_MISMATCH);
-        }
-    }
-    
-    if (!m_last_stamp.isNull())
-    {
-        base::Time dt = reading.time - m_last_stamp;
-        _period.write(m_period_stats.update(dt.toMilliseconds()));
-    }
-
-    m_last_stamp = reading.time;
-    _scans.write(reading);
-}
-
 void Task::updateHook()
 {
-    readData(true);
+    base::samples::LaserScan reading;
+    base::Time now = base::Time::now();
+    if( m_driver->readRanges(reading) ) {
+	if (!m_last_device.isNull()) {
+	    //assume about 25ms period
+	    int lost = (int)((reading.time - m_last_device).toSeconds() /
+			     0.025 - 0.5) - 1;
+	    if (lost > 0)
+		timestamp_synchronizer->lostItems(lost);
+	}
+	m_last_device = reading.time;
+	//this accounts for the time needed to take the sample, as
+	//we only get the timestamp after that
+	timestamp_synchronizer->pushItem
+	    (reading, now - base::Time::fromSeconds(0.025/8*7));
+    }
+
+    base::Time ts;
+
+    while (_timestamps.read(ts) == RTT::NewData)
+	timestamp_synchronizer->pushReference(ts);
+
+
+    while(timestamp_synchronizer->fetchItem(reading,ts,now)) {
+	reading.time = ts;
+
+	if (!m_last_stamp.isNull())
+	    {
+		base::Time dt = reading.time - m_last_stamp;
+		_period.write(m_period_stats.update(dt.toMilliseconds()));
+	    }
+
+	m_last_stamp = reading.time;
+	_scans.write(reading);
+    }
 }
 
-void Task::errorHook()
-{
-    readData(false);
-}
+//void Task::errorHook()
+//{
+//}
 void Task::stopHook()
 {
     RTT::extras::FileDescriptorActivity* fd_activity =
@@ -141,5 +127,7 @@ void Task::cleanupHook()
 {
     delete m_driver;
     m_driver = 0;
+    delete timestamp_synchronizer;
+    timestamp_synchronizer = 0;
 }
 
