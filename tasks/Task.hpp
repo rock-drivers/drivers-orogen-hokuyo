@@ -6,7 +6,7 @@
 namespace aggregator
 {
     template<class Item>
-    class TimestampSynchronizer;
+    class Timestamper;
 }
 
 class URG;
@@ -29,7 +29,7 @@ namespace hokuyo {
             StatUpdater()
                 : m_max(0), m_count(0), m_sum(0), m_sum2(0) {}
 
-            Statistics update(int value)
+            Statistics update(unsigned int value)
             {
                 m_sum  += value;
                 m_sum2 += value * value;
@@ -53,8 +53,7 @@ namespace hokuyo {
         base::Time m_last_device;
         base::Time m_last_stamp;
 
-	aggregator::TimestampSynchronizer<base::samples::LaserScan>*
-	timestamp_synchronizer;
+	aggregator::Timestamper<base::samples::LaserScan>* timestamper;
 
     public:
         Task(std::string const& name = "hokuyo::Task");
