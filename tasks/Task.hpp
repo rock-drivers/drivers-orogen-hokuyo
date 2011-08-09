@@ -5,8 +5,7 @@
 
 namespace aggregator
 {
-    template<class Item>
-    class Timestamper;
+    class TimestampEstimator;
 }
 
 class URG;
@@ -53,7 +52,8 @@ namespace hokuyo {
         base::Time m_last_device;
         base::Time m_last_stamp;
 
-	aggregator::Timestamper<base::samples::LaserScan>* timestamper;
+	aggregator::TimestampEstimator* timestampEstimator;
+        void readData(bool use_external_timestamps);
 
     public:
         Task(std::string const& name = "hokuyo::Task");
@@ -106,7 +106,7 @@ namespace hokuyo {
          *
          * Call recovered() to go back in the Runtime state.
          */
-        //void errorHook();
+        void errorHook();
 
         /** This hook is called by Orocos when the state machine transitions
          * from Running to Stopped after stop() has been called.

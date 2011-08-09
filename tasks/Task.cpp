@@ -4,7 +4,7 @@
 #include <hokuyo.hh>
 #include <memory>
 #include <iostream>
-#include <Timestamper.hpp>
+#include <TimestampEstimator.hpp>
 
 using namespace hokuyo;
 using namespace std;
@@ -13,26 +13,21 @@ using RTT::Logger;
 Task::Task(std::string const& name)
     : TaskBase(name)
     , m_driver(0)
-    , timestamper(0)
+    , timestampEstimator(0)
 {
 }
 
 Task::~Task()
 {
     delete m_driver;
-    delete timestamper;
+    delete timestampEstimator;
 }
 
 bool Task::configureHook()
 {
-   timestamper =
-       new aggregator::Timestamper<base::samples::LaserScan>
-       (base::Time::fromSeconds(0.10),
-	//the time needed to capture a full scan is subtracted when pushing the
-	//item into the synchronizer
-	base::Time::fromSeconds(0),
-	base::Time::fromSeconds(0.025),
-	base::Time::fromSeconds(20),
+   timestampEstimator =
+       new aggregator::TimestampEstimator
+       (base::Time::fromSeconds(20),
 	base::Time::fromSeconds(0.025));
 
     auto_ptr<URG> driver(new URG());
@@ -72,52 +67,48 @@ bool Task::startHook()
     return true;
 }
 
-void Task::updateHook()
+void Task::readData(bool use_external_timestamps)
 {
-    base::samples::LaserScan reading;
-    base::Time now = base::Time::now();
-
-    if (_timestamps.connected())
-	timestamper->enableSynchronization();
-
-    if (m_driver->readRanges(reading)) {
-	if (!m_last_device.isNull()) {
-	    //assume about 25ms period
-	    int lost = (int)((reading.time - m_last_device).toSeconds() /
-			     0.025 - 0.5) - 1;
-	    if (lost > 0)
-		timestamper->lostItems(lost);
-	}
-	m_last_device = reading.time;
-	//this accounts for the time needed to take the sample, as
-	//we only get the timestamp after that
-	timestamper->pushItem
-	    (reading, now - base::Time::fromSeconds(0.025/8*7));
-    }
-
     base::Time ts;
 
-    while (_timestamps.read(ts) == RTT::NewData)
-	timestamper->pushReference(ts);
-
-
-    while(timestamper->fetchItem(reading,ts,now)) {
-	reading.time = ts;
-
-	if (!m_last_stamp.isNull())
-	    {
-		base::Time dt = reading.time - m_last_stamp;
-		_period.write(m_period_stats.update(dt.toMilliseconds()));
-	    }
-
-	m_last_stamp = reading.time;
-	_scans.write(reading);
+    while (_timestamps.read(ts) == RTT::NewData) {
+	timestampEstimator->updateReference(ts);
+	m_last_device = ts;
     }
+
+    base::samples::LaserScan reading;
+    if (!m_driver->readRanges(reading))
+	return;
+
+    if (use_external_timestamps && _timestamps.connected())
+    {
+	if (m_last_device + base::Time::fromSeconds(1) < reading.time)
+        {
+            // No timestamps for over 1 second. Go into degraded mode.
+            error(TIMESTAMP_MISMATCH);
+        }
+	reading.time = timestampEstimator->update(reading.time);
+    }
+
+    if (!m_last_stamp.isNull())
+    {
+        base::Time dt = reading.time - m_last_stamp;
+        _period.write(m_period_stats.update(dt.toMilliseconds()));
+    }
+
+    m_last_stamp = reading.time;
+    _scans.write(reading);
 }
 
-//void Task::errorHook()
-//{
-//}
+void Task::updateHook()
+{
+    readData(true);
+}
+
+void Task::errorHook()
+{
+    readData(false);
+}
 void Task::stopHook()
 {
     RTT::extras::FileDescriptorActivity* fd_activity =
@@ -131,7 +122,7 @@ void Task::cleanupHook()
 {
     delete m_driver;
     m_driver = 0;
-    delete timestamper;
-    timestamper = 0;
+    delete timestampEstimator;
+    timestampEstimator = 0;
 }
 
