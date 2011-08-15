@@ -4,7 +4,7 @@
 #include <hokuyo.hh>
 #include <memory>
 #include <iostream>
-#include <TimestampEstimator.hpp>
+#include <aggregator/TimestampEstimator.hpp>
 
 using namespace hokuyo;
 using namespace std;
