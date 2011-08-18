@@ -13,7 +13,7 @@ using RTT::Logger;
 Task::Task(std::string const& name)
     : TaskBase(name)
     , m_driver(0)
-    , timestampEstimator(0)
+    , timestampEstimator(new aggregator::TimestampEstimator)
 {
 }
 
@@ -25,11 +25,6 @@ Task::~Task()
 
 bool Task::configureHook()
 {
-   timestampEstimator =
-       new aggregator::TimestampEstimator
-       (base::Time::fromSeconds(20),
-	base::Time::fromSeconds(0.025));
-
     auto_ptr<URG> driver(new URG());
     if (_rate.value() && !driver->setBaudrate(_rate.value()))
     {
@@ -61,17 +56,20 @@ bool Task::startHook()
         return false;
     }
 
-    // The timestamper may have already sent data and filled the buffer. Clear
-    // it so that the next updateHook() gets a valid timestamp.
-    _timestamps.clear();
+    int period = 25;
+    if (_remission_values)
+        period = 50;
+
+    timestampEstimator->reset(base::Time::fromSeconds(20),
+            base::Time::fromMicroseconds(period * 1000),
+            _sample_loss_threshold.get());
     return true;
 }
 
 void Task::readData(bool use_external_timestamps)
 {
     base::Time ts;
-
-    while (_timestamps.read(ts) == RTT::NewData) {
+    while (_hardware_timestamps.read(ts) == RTT::NewData) {
 	timestampEstimator->updateReference(ts);
 	m_last_device = ts;
     }
@@ -80,7 +78,7 @@ void Task::readData(bool use_external_timestamps)
     if (!m_driver->readRanges(reading))
 	return;
 
-    if (use_external_timestamps && _timestamps.connected())
+    if (use_external_timestamps && _hardware_timestamps.connected())
     {
 	if (m_last_device + base::Time::fromSeconds(1) < reading.time)
         {
@@ -98,6 +96,7 @@ void Task::readData(bool use_external_timestamps)
 
     m_last_stamp = reading.time;
     _scans.write(reading);
+    _timestamp_estimator_status.write(timestampEstimator->getStatus());
 }
 
 void Task::updateHook()
@@ -122,7 +121,5 @@ void Task::cleanupHook()
 {
     delete m_driver;
     m_driver = 0;
-    delete timestampEstimator;
-    timestampEstimator = 0;
 }
 

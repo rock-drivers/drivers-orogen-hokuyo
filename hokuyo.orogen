@@ -4,6 +4,7 @@ import_types_from "base"
 import_types_from "stats.h"
 
 using_library 'hokuyo'
+import_types_from "aggregator"
 
 task_context 'Task' do
     needs_configuration
@@ -30,11 +31,16 @@ task_context 'Task' do
         doc "statistics on the acquisition period"
     output_port('latency', 'hokuyo/Statistics').
         doc "statistics on the acquisition latency"
-    input_port('timestamps', 'base/Time').
-        doc "if connected, gives the timestamps of the scans"
     output_port('scans', 'base/samples/LaserScan').
         max_sizes('remission' => 2000, 'ranges' => 2000).
         doc "the laser scans themselves"
+
+    property('sample_loss_threshold', 'int', 2).
+        doc "timestamp estimator configuration"
+    input_port('hardware_timestamps', 'base/Time').
+        doc "if connected, gives the timestamps of the scans"
+    output_port("timestamp_estimator_status", "/aggregator/TimestampEstimatorStatus").
+        doc "internal state of the timestamp estimator"
 
     error_states :TIMESTAMP_MISMATCH
 end
