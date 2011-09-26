@@ -17,6 +17,13 @@ Task::Task(std::string const& name)
 {
 }
 
+Task::Task(std::string const& name, RTT::ExecutionEngine* engine)
+    : TaskBase(name, engine)
+    , m_driver(0)
+    , timestampEstimator(0)
+{
+}
+
 Task::~Task()
 {
     delete m_driver;

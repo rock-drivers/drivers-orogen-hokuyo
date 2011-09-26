@@ -57,6 +57,7 @@ namespace hokuyo {
 
     public:
         Task(std::string const& name = "hokuyo::Task");
+        Task(std::string const& name, RTT::ExecutionEngine* engine);
         ~Task();
 
         /** This hook is called by Orocos when the state machine transitions
