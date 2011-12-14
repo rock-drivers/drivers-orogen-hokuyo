@@ -105,6 +105,7 @@ void Task::readData(bool use_external_timestamps)
 
     m_last_stamp = reading.time;
     _scans.write(reading);
+    _timestamp_estimator_status.write(timestampEstimator->getStatus());
 }
 
 void Task::updateHook()
