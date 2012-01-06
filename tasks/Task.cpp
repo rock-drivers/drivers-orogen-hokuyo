@@ -32,7 +32,8 @@ Task::~Task()
 
 bool Task::configureHook()
 {
-   timestampEstimator =
+    //BUG the inital period is dependand on the device
+    timestampEstimator =
        new aggregator::TimestampEstimator
        (base::Time::fromSeconds(20),
 	base::Time::fromSeconds(0.025));
@@ -74,49 +75,30 @@ bool Task::startHook()
     return true;
 }
 
-void Task::readData(bool use_external_timestamps)
+void Task::updateHook()
 {
     base::Time ts;
 
     while (_timestamps.read(ts) == RTT::NewData) {
 	timestampEstimator->updateReference(ts);
-	m_last_device = ts;
     }
 
+    //read sample from hardware
     base::samples::LaserScan reading;
     if (!m_driver->readRanges(reading))
 	return;
 
-    if (use_external_timestamps && _timestamps.connected())
-    {
-	if (m_last_device + base::Time::fromSeconds(1) < reading.time)
-        {
-            // No timestamps for over 1 second. Go into degraded mode.
-            error(TIMESTAMP_MISMATCH);
-        }
-	reading.time = timestampEstimator->update(reading.time);
-    }
+    //System time when the sample was read
+    base::Time readSampleTime = base::Time::now();
 
-    if (!m_last_stamp.isNull())
-    {
-        base::Time dt = reading.time - m_last_stamp;
-        _period.write(m_period_stats.update(dt.toMilliseconds()));
-    }
+    //do not use the sample time here (reading.time), as it
+    //is from the hokuyo internal clock which is known to drift
+    reading.time = timestampEstimator->update(readSampleTime, m_driver->getPacketCounter());
 
-    m_last_stamp = reading.time;
     _scans.write(reading);
     _timestamp_estimator_status.write(timestampEstimator->getStatus());
 }
 
-void Task::updateHook()
-{
-    readData(true);
-}
-
-void Task::errorHook()
-{
-    readData(false);
-}
 void Task::stopHook()
 {
     RTT::extras::FileDescriptorActivity* fd_activity =

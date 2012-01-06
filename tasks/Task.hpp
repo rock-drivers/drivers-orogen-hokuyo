@@ -18,42 +18,10 @@ namespace hokuyo {
     
         URG* m_driver;
     
-        struct StatUpdater
-        {
-            uint64_t m_max;
-            uint64_t m_count;
-            uint64_t m_sum;
-            uint64_t m_sum2;
-
-            StatUpdater()
-                : m_max(0), m_count(0), m_sum(0), m_sum2(0) {}
-
-            Statistics update(unsigned int value)
-            {
-                m_sum  += value;
-                m_sum2 += value * value;
-                if (m_max < value)
-                    m_max = value;
-                m_count++;
-
-                Statistics stats;
-                stats.count = m_count;
-                stats.min   = 0;
-                stats.max   = m_max;
-                stats.mean  = m_sum / m_count;
-                stats.dev   = sqrt((m_sum2 / m_count) - (stats.mean * stats.mean));
-                return stats;
-            }
-        };
-
-        StatUpdater m_period_stats;
-        StatUpdater m_latency_stats;
-
         base::Time m_last_device;
         base::Time m_last_stamp;
 
 	aggregator::TimestampEstimator* timestampEstimator;
-        void readData(bool use_external_timestamps);
 
     public:
         Task(std::string const& name = "hokuyo::Task");
@@ -107,7 +75,7 @@ namespace hokuyo {
          *
          * Call recovered() to go back in the Runtime state.
          */
-        void errorHook();
+//         void errorHook();
 
         /** This hook is called by Orocos when the state machine transitions
          * from Running to Stopped after stop() has been called.
