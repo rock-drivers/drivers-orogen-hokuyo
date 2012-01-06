@@ -32,12 +32,9 @@ Task::~Task()
 
 bool Task::configureHook()
 {
-    //BUG the inital period is dependand on the device
-    timestampEstimator =
-       new aggregator::TimestampEstimator
-       (base::Time::fromSeconds(20),
-	base::Time::fromSeconds(0.025));
-
+    if(!TaskBase::configure())
+	return false;
+    
     auto_ptr<URG> driver(new URG());
     if (_rate.value() && !driver->setBaudrate(_rate.value()))
     {
@@ -51,7 +48,16 @@ bool Task::configureHook()
         return false;
     }
 
-    Logger::log(Logger::Info) << driver->getInfo() << Logger::endl;
+    URG::DeviceInfo devInfo = driver->getInfo();    
+    Logger::log(Logger::Info) << devInfo << Logger::endl;
+    
+    double devicePeriod = 1.0 / (devInfo.motorSpeed  / (M_PI * 2.0));
+    
+    timestampEstimator =
+       new aggregator::TimestampEstimator
+       (base::Time::fromSeconds(800 * devicePeriod),
+	base::Time::fromSeconds(devicePeriod));
+           
     m_driver = driver.release();
     return true;
 }
