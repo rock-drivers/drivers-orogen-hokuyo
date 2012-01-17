@@ -32,7 +32,7 @@ Task::~Task()
 
 bool Task::configureHook()
 {
-    if(!TaskBase::configure())
+    if(!TaskBase::configureHook())
 	return false;
     
     auto_ptr<URG> driver(new URG());
