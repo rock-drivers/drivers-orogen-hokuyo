@@ -64,6 +64,9 @@ bool Task::configureHook()
 
 bool Task::startHook()
 {
+    if (!TaskBase::startHook())
+        return false;
+
     RTT::extras::FileDescriptorActivity* fd_activity =
         getActivity<RTT::extras::FileDescriptorActivity>();
     if (fd_activity)
