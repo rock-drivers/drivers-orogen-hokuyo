@@ -1,7 +1,7 @@
 name 'hokuyo'
 
 import_types_from "base"
-import_types_from "aggregator/TimestampEstimatorStatus.hpp"
+import_types_from "aggregator"
 
 using_library 'hokuyo'
 

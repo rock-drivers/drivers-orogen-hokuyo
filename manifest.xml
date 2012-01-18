@@ -12,6 +12,7 @@
   <license>GPL v2 or later</license>
   <depend package="drivers/hokuyo"/>
   <depend package="drivers/aggregator"/>
+  <depend package="drivers/orogen/aggregator"/>
   <depend package="base/orogen/types"/>
   <depend package="tools/logger"/>
   <depend package="orogen"/>
