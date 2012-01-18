@@ -51,7 +51,7 @@ bool Task::configureHook()
     URG::DeviceInfo devInfo = driver->getInfo();    
     Logger::log(Logger::Info) << devInfo << Logger::endl;
     
-    double devicePeriod = 1.0 / (devInfo.motorSpeed  / (M_PI * 2.0));
+    double devicePeriod = 1.0 / devInfo.motorSpeed;
     
     timestampEstimator =
        new aggregator::TimestampEstimator
