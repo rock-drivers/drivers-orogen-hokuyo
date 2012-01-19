@@ -51,13 +51,12 @@ bool Task::configureHook()
     URG::DeviceInfo devInfo = driver->getInfo();    
     Logger::log(Logger::Info) << devInfo << Logger::endl;
     
-    double devicePeriod = 1.0 / devInfo.motorSpeed;
-    
+    m_devicePeriod = 1.0 / devInfo.motorSpeed;
     timestampEstimator =
        new aggregator::TimestampEstimator
-       (base::Time::fromSeconds(800 * devicePeriod),
-	base::Time::fromSeconds(devicePeriod));
-           
+       (base::Time::fromSeconds(800 * m_devicePeriod),
+	base::Time::fromSeconds(m_devicePeriod));
+
     m_driver = driver.release();
     return true;
 }
@@ -94,17 +93,36 @@ void Task::updateHook()
 
     //read sample from hardware
     base::samples::LaserScan reading;
-    if (!m_driver->readRanges(reading))
-	return;
+    int timeout = 2 * m_devicePeriod * 1000;
+    bool first_time = true;
+    while (first_time || m_driver->hasPacket())
+    {
+        if (!m_driver->readRanges(reading, timeout))
+        {
+            if ((first_time || m_driver->error() != URG::READ_TIMEOUT) && m_driver->error() != URG::DUPLICATE)
+            {
+                if (m_driver->error == URG::READ_TIMEOUT)
+                    return exception(IO_TIMEOUT);
+                else
+                {
+                    RTT::log(RTT::Error) << "error from driver: " << m_driver->errorString() << RTT::endlog();
+                    return exception(IO_ERROR);
+                }
+            }
+            break;
+        }
+        first_time = false;
 
-    //System time when the sample was read
-    base::Time readSampleTime = base::Time::now();
+        //System time when the sample was read
+        base::Time readSampleTime = base::Time::now();
 
-    //do not use the sample time here (reading.time), as it
-    //is from the hokuyo internal clock which is known to drift
-    reading.time = timestampEstimator->update(readSampleTime, m_driver->getPacketCounter());
+        //do not use the sample time here (reading.time), as it
+        //is from the hokuyo internal clock which is known to drift
+        reading.time = timestampEstimator->update(readSampleTime, m_driver->getPacketCounter());
 
-    _scans.write(reading);
+        _scans.write(reading);
+    }
+
     _timestamp_estimator_status.write(timestampEstimator->getStatus());
 }
 

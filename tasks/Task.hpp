@@ -17,10 +17,8 @@ namespace hokuyo {
     protected:
     
         URG* m_driver;
-    
-        base::Time m_last_device;
-        base::Time m_last_stamp;
-
+        // Period of one acquisition in seconds
+        double m_devicePeriod;
 	aggregator::TimestampEstimator* timestampEstimator;
 
     public:
