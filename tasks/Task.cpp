@@ -101,7 +101,7 @@ void Task::updateHook()
         {
             if ((first_time || m_driver->error() != URG::READ_TIMEOUT) && m_driver->error() != URG::DUPLICATE)
             {
-                if (m_driver->error == URG::READ_TIMEOUT)
+                if (m_driver->error() == URG::READ_TIMEOUT)
                     return exception(IO_TIMEOUT);
                 else
                 {
