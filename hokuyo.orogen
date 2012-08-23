@@ -2,10 +2,12 @@ name 'hokuyo'
 
 import_types_from "base"
 import_types_from "aggregator"
+using_task_library "interfaces"
 
 using_library 'hokuyo'
 
 task_context 'Task' do
+    subclasses 'interfaces::LaserRangeFinder'
     needs_configuration
     fd_driven
 
@@ -14,23 +16,8 @@ task_context 'Task' do
     property('rate', 'int'        , 115200).
         doc 'the baud rate (only for serial connections)'
 
-    property('remission_values',  'int', 0).
-        doc 'will record remission values if set to 1'
-    property('start_step',  'int', -1).
-        doc 'the step at which to start acquisition'
-    property('end_step',    'int', -1).
-        doc 'the step at which to end acquisition'
-    property('scan_skip',   'int', 0).
-        doc 'how much acquisitions to ignore between two acquisitions to report'
-    property('merge_count', 'int', 1).
-        doc 'how much ranges measurement to merge into one single reported measurement'
-
     input_port('timestamps', 'base/Time').
         doc "if connected, gives the timestamps of the scans"
-    output_port('scans', 'base/samples/LaserScan').
-        max_sizes('remission' => 2000, 'ranges' => 2000).
-        doc "the laser scans themselves"
-
     output_port('timestamp_estimator_status', 'aggregator::TimestampEstimatorStatus').
 	doc("Debug output of the TimestampEstimator")
 
