@@ -24,14 +24,3 @@ task_context 'Task' do
     exception_states :IO_TIMEOUT, :IO_ERROR
 end
 
-deployment "test" do
-    do_not_install
-    acquisition = task('driver', 'Task')
-
-    add_default_logger
-
-    if !corba_enabled?
-        browse acquisition
-    end
-end
-
