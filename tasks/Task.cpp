@@ -36,16 +36,23 @@ bool Task::configureHook()
 	return false;
     
     auto_ptr<URG> driver(new URG());
-    if (_rate.value() && !driver->setBaudrate(_rate.value()))
+    if (_io_port.get().empty())
     {
-        std::cerr << "failed to set the baud rate to " << _rate.get() << std::endl;
-        return false;
-    }
+        if (_rate.value() && !driver->setBaudrate(_rate.value()))
+        {
+            std::cerr << "failed to set the baud rate to " << _rate.get() << std::endl;
+            return false;
+        }
 
-    if (!driver->open(_port.value()))
+        if (!driver->open(_port.value()))
+        {
+            std::cerr << "failed to open the device on " << _port.get() << std::endl;
+            return false;
+        }
+    }
+    else
     {
-        std::cerr << "failed to open the device on " << _port.get() << std::endl;
-        return false;
+        driver->openURI(_io_port);
     }
 
     URG::DeviceInfo devInfo = driver->getInfo();    

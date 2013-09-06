@@ -9,10 +9,18 @@ task_context 'Task' do
     needs_configuration
     fd_driven
 
-    property('port', '/std/string', "").
-        doc 'the device port'
-    property('rate', 'int'        , 115200).
-        doc 'the baud rate (only for serial connections)'
+    # The URI that allows to connect to the device
+    #
+    # For serial devices, it is of the form
+    #   serial:///dev/ttyS0:19200
+    # For ethernet devices, it is of the form
+    #   tcp://192.168.0.10:10940
+    property 'io_port', '/std/string'
+
+    # Deprecated. Use the io_port property instead
+    property('port', '/std/string', "")
+    # Deprecated. Use the io_port property instead
+    property('rate', 'int'        , 115200)
 
     property('remission_values',  'int', 0).
         doc 'will record remission values if set to 1'
