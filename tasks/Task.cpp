@@ -100,7 +100,7 @@ void Task::updateHook()
 
     //read sample from hardware
     base::samples::LaserScan reading;
-    int timeout = 10 * m_devicePeriod * 1000;
+    int timeout = 10 * m_devicePeriod * 100000;
     bool first_time = true;
     while (first_time || m_driver->hasPacket())
     {
