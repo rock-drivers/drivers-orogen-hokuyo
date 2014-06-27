@@ -7,11 +7,9 @@ if !ARGV[0]
     exit 1
 end
 
-ENV['PKG_CONFIG_PATH'] = "#{File.expand_path("..", File.dirname(__FILE__))}/build:#{ENV['PKG_CONFIG_PATH']}"
-
 Orocos.initialize
 
-Orocos::Process.run 'test' do |p|
+Orocos.run 'hokuyo::Task' => "driver" do |p|
     #Orocos.log_all_ports
 
     # initialise hokuyo
@@ -25,8 +23,9 @@ Orocos::Process.run 'test' do |p|
     hokuyo.start
     puts "done."
 
-    Vizkit::UiLoader.register_default_widget_for "RangeView", "/base/samples/LaserScan"
-    Vizkit.display hokuyo.scans
+    widget = Vizkit.default_loader.RangeView
+    widget.show
+    hokuyo.scans.connect_to widget
     Vizkit.exec
     
     hokuyo.stop
