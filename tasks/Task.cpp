@@ -38,22 +38,12 @@ bool Task::configureHook()
     auto_ptr<URG> driver(new URG());
     if (_io_port.get().empty())
     {
-        if (_rate.value() && !driver->setBaudrate(_rate.value()))
-        {
-            std::cerr << "failed to set the baud rate to " << _rate.get() << std::endl;
-            return false;
-        }
-
-        if (!driver->open(_port.value()))
-        {
-            std::cerr << "failed to open the device on " << _port.get() << std::endl;
-            return false;
-        }
+        //Assume that device is given by deprecated 'port' property.
+        std::stringstream address;
+        address << "file://" << _port.get() << ":" << _rate.get();
+        _io_port = address.str();
     }
-    else
-    {
-        driver->openURI(_io_port);
-    }
+    driver->openURI(_io_port);
 
     URG::DeviceInfo devInfo = driver->getInfo();    
     Logger::log(Logger::Info) << devInfo << Logger::endl;
