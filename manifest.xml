@@ -5,6 +5,7 @@
         laser scanners (through the SCIP2 protocol).
     </description>
   <author>Sylvain Joyeux/sylvain.joyeux@dfki.de</author>
+  <maintainer>Stefan Haase/stefan.haase@dfki.de</maintainer>
   <copyright>
         DFKI/robotik@dfki.de
         Sylvain Joyeux/sylvain.joyeux@m4x.org
