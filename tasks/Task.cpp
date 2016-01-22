@@ -36,17 +36,14 @@ bool Task::configureHook()
 	return false;
     
     auto_ptr<URG> driver(new URG());
-    if (_rate.value() && !driver->setBaudrate(_rate.value()))
+    if (_io_port.get().empty())
     {
-        std::cerr << "failed to set the baud rate to " << _rate.get() << std::endl;
-        return false;
+        //Assume that device is given by deprecated 'port' property.
+        std::stringstream address;
+        address << "file://" << _port.get() << ":" << _rate.get();
+        _io_port = address.str();
     }
-
-    if (!driver->open(_port.value()))
-    {
-        std::cerr << "failed to open the device on " << _port.get() << std::endl;
-        return false;
-    }
+    driver->openURI(_io_port);
 
     URG::DeviceInfo devInfo = driver->getInfo();    
     Logger::log(Logger::Info) << devInfo << Logger::endl;
@@ -93,7 +90,7 @@ void Task::updateHook()
 
     //read sample from hardware
     base::samples::LaserScan reading;
-    int timeout = 2 * m_devicePeriod * 1000;
+    int timeout = 10 * m_devicePeriod * 100000;
     bool first_time = true;
     while (first_time || m_driver->hasPacket())
     {

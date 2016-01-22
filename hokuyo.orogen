@@ -9,8 +9,18 @@ task_context 'Task' do
     needs_configuration
     fd_driven
 
+    # The URI that allows to connect to the device
+    #
+    # For serial devices, it is of the form
+    #   serial:///dev/ttyS0:19200
+    # For ethernet devices, it is of the form
+    #   tcp://192.168.0.10:10940
+    property 'io_port', '/std/string'
+
+    # Deprecated. Use the io_port property instead
     property('port', '/std/string', "").
         doc 'the device port'
+    # Deprecated. Use the io_port property instead
     property('rate', 'int'        , 115200).
         doc 'the baud rate (only for serial connections)'
     
@@ -25,12 +35,12 @@ task_context 'Task' do
     property('merge_count', 'int', 1).
         doc 'how much ranges measurement to merge into one single reported measurement'
 
+    input_port('timestamps', 'base/Time').
+        doc "if connected, gives the timestamps of the scans"
+
     output_port('scans', 'base/samples/LaserScan').
         max_sizes('remission' => 2000, 'ranges' => 2000).
         doc "the laser scans themselves"
-
-    input_port('timestamps', 'base/Time').
-        doc "if connected, gives the timestamps of the scans"
     output_port('timestamp_estimator_status', 'aggregator::TimestampEstimatorStatus').
 	doc("Debug output of the TimestampEstimator")
 
