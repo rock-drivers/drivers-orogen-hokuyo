@@ -16,7 +16,7 @@ Orocos.run 'hokuyo::Task' => "driver" do |p|
     puts "starting hokuyo ..."
     hokuyo = p.task 'driver'
 
-    hokuyo.port = ARGV[0]
+    hokuyo.io_port = ARGV[0]
     #hokuyo.remission_values = 1
 
     hokuyo.configure
